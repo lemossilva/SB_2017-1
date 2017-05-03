@@ -5,6 +5,6 @@ Identação : tab simples
 
 Compilação : gcc -ansi -Wall prog.c -o prog
 
-  "-Wall" : identificar warnings
+  "-Wall" : identificar warnings 
   "-ansi" : utiliza o padrão ANSI C
 
