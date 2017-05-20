@@ -1,0 +1,20 @@
+Begin;funciona
+TRIANGULO: EQU 1;isto é uma constante
+TRETA: EQU 2111111;comentario doido
+OLAR: EQU 3;eae man kk
+SECTION TEXT
+INpUT		B
+INPUT		H
+LOaD		B
+MULT		H
+IF TRIANGULO
+DIV		DOIS
+STORE		R
+OUTPUT	 R
+STOP
+SECTION DATA
+B:		SPACE
+H:		SPACE
+R:		SPACE
+DOIS:	CONST		2
+end
