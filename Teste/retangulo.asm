@@ -1,3 +1,4 @@
+begin
 INPUT	B
 INPUT	H
 LOAD	B
@@ -10,3 +11,4 @@ B:	SPACE
 H:	SPACE
 R:	SPACE
 DOIS:	CONST	2
+end
