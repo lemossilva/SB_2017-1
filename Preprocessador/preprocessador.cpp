@@ -7,6 +7,7 @@
 #include <vector>
 using namespace std;
 
+//Função que preprocessa o arquivo de entrada
 
 bool fancy(ifstream &srce_file, fstream &no_comments)
 {
