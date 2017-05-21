@@ -1,5 +1,6 @@
 Begin;funciona
 TRIANGULO: EQU 1;isto é uma constante
+BLA: EQU 0
 TRETA: EQU 2111111;comentario doido
 OLAR: EQU 3;eae man kk
 SECTION TEXT
@@ -8,9 +9,10 @@ INPUT		H
 LOaD		B
 MULT		H
 IF TRIANGULO
+IF BLA
 DIV		DOIS
-STORE		R
-OUTPUT	 R
+STORE		OLAR
+OUTPUT	 TREta
 STOP
 SECTION DATA
 B:		SPACE

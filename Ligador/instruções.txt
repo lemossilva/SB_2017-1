@@ -1,0 +1,7 @@
+Compilar o ligador com G++11
+g++ -std=c++11 ligador.cpp -o ligador
+
+Para executar o ligador, deve-se colocar primeiro os arquivos a serem ligados
+(no máximo 3) e depois o arquivo de saída.
+
+./ligador arquivo1.o arquivo2.o arquivo3.o saida.e

@@ -1,3 +1,6 @@
+//ESQUELETO DA MAIN PARA O MONTADOR/PREPROCESSSADOR
+
+
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -12,7 +15,7 @@ int main(int argc, char const *argv[])
 	string filename, option;
 	if (!(argc == 4))
 	{
-		cerr << "Número inválido de argumentos"
+		cerr << "Número inválido de argumentos" << endl;
 	}
 	argv[2] >> filename;
 	argv[1] >> option;

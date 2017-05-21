@@ -126,7 +126,7 @@ bool fancy(ifstream &srce_file, fstream &no_comments)
 int main(int argc, char const *argv[])		//Apenas ambiente de teste, o importante é a função acima
 {
 	ifstream my_file("triangulo.asm");
-	fstream file_out("saida.txt", ios::out|ios::in|ios::trunc);
+	fstream file_out("saida.pre", ios::out|ios::in|ios::trunc);
 	fancy(my_file,file_out);
 	my_file.close();
 	file_out.close();
