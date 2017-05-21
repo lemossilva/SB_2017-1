@@ -169,11 +169,11 @@ int main(int argc, char const *argv[])
 	}
 	else if(argc == 5)
 	{
-		ifstream object_file(argv[1]);
+		object_file.open(argv[1])
 		files.push_back(&object_file);
-		ifstream object_file2(argv[2]);
+		object_file2.open(argv[2])
 		files.push_back(&object_file2);
-		ifstream object_file3(argv[3]);
+		object_file3.open(argv[3])
 		files.push_back(&object_file3);
 	}
 
@@ -191,6 +191,6 @@ int main(int argc, char const *argv[])
 
 
 	linker((argc - 2), files, exe_file);  //Liga os arquivos
-	
+
 	return 0;
 }
