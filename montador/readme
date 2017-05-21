@@ -1,0 +1,5 @@
+compila como:
+
+g++ -Wall -ansi montador.cpp -o montador
+
+./montador saida_mole.pre
