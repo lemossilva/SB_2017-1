@@ -2,4 +2,9 @@ compila como:
 
 g++ -Wall -ansi montador.cpp -o montador
 
-./montador saida_mole.pre
+se somente primeira passagem:
+
+./montador saida_mole.pre 1
+
+se duas passagens:
+./montador saida_mole.pre 2
