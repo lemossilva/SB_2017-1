@@ -15,7 +15,7 @@
 using namespace std;
 
 ifstream arquivo_entrada;
-ofstream arquivo_saida, arquivo_pre_temp;
+fstream arquivo_saida, arquivo_pre_temp;
 
 int main(int argc, char const *argv[])
 {
@@ -31,6 +31,7 @@ int main(int argc, char const *argv[])
 	if ((filename.substr(filename.find(".")+1) == "asm") && option == "-o")
 	{
 		//Chama pré-processador e montador
+		cout << "ASM e -o" << endl;
 		arquivo_entrada.open(argv[2]);
 		arquivo_pre_temp.open(argv[3],ios::out|ios::trunc);
 		pre_proc(arquivo_entrada,arquivo_pre_temp);
@@ -39,13 +40,16 @@ int main(int argc, char const *argv[])
 	}
 	else if ((filename.substr(filename.find(".")+1) == "pre") && option == "-o")
 	{
+		cout << "PRE e -o" << endl;
 		chama_montador(filename,saida);
 	}
 	else if((filename.substr(filename.find(".")+1) == "asm") && option == "-p")
 	{
+		cout << "ASM e -p" << endl;
+		string ext (".pre");
 		arquivo_entrada.open(argv[2]);
-		saida << ".pre";
-		arquivo_pre_temp.open(saida.c_str());
+		saida += ext;
+		arquivo_pre_temp.open(saida.c_str(),ios::out|ios::trunc);
 		pre_proc(arquivo_entrada,arquivo_pre_temp);
 	}
 	else
