@@ -87,12 +87,12 @@ bool linker(int nfile, vector<ifstream*> object_vector, ofstream &output)
 
 		if(i != 0)			//Aplica o fator de correção
 		{
-			for(int j = 1; j < table_gd.size(); j+=2) // Aplica o fator de correção na tabela de definições
+			for(unsigned int j = 1; j < table_gd.size(); j+=2) // Aplica o fator de correção na tabela de definições
 			{
 				table_gd[j] = to_string(stoi(table_gd[j]) + correction_factor[i]);
 				//cout << table_gd[j] << endl;
 			}
-			for(int cont = 0; cont < code.size(); cont++) //Aplica na seção CODE dependendo da tabela de realocação
+			for(unsigned int cont = 0; cont < code.size(); cont++) //Aplica na seção CODE dependendo da tabela de realocação
 			{
 				if(realocation[cont])
 				{
@@ -107,15 +107,15 @@ bool linker(int nfile, vector<ifstream*> object_vector, ofstream &output)
 		code_g.push_back(code);
 	}
 
-	for(int i = 0; i < table_use_g.size(); i++)		//Resolve pendências cruzadas
+	for(unsigned int i = 0; i < table_use_g.size(); i++)		//Resolve pendências cruzadas
 	{
-		for(int j = 0; j < table_use_g[i].size(); j+=2)
+		for(unsigned int j = 0; j < table_use_g[i].size(); j+=2)
 		{
 			//cout << table_use_g[i][j] << ' ';
 			bool flag_achou = false;
-			for(int g = 0; g < table_gd_g.size(); g++)
+			for(unsigned int g = 0; g < table_gd_g.size(); g++)
 			{
-				for(int k = 0; k < table_gd_g[g].size(); k+=2)
+				for(unsigned int k = 0; k < table_gd_g[g].size(); k+=2)
 				{
 					if(table_use_g[i][j] == table_gd_g[g][k])
 					{

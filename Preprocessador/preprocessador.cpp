@@ -9,7 +9,7 @@ using namespace std;
 
 //Função que preprocessa o arquivo de entrada
 
-bool fancy(ifstream &srce_file, fstream &no_comments)
+bool pre_proc(ifstream &srce_file, fstream &no_comments)
 {
 
 	bool flag;
@@ -78,13 +78,21 @@ bool fancy(ifstream &srce_file, fstream &no_comments)
 				subcounter = 0;
 
 
-			if(tokens[i].find("IF") != string::npos && tokens[i+1].find("1") == string::npos)		//Se acha a diretiva IF e ela tem um valor 0 pela frente, seta a flag
+			if(tokens[i].find("IF") != string::npos && (tokens[i+1].find("1") == string::npos))		//Se acha a diretiva IF e ela tem um valor 0 pela frente, seta a flag
 			{
 				flag = true;
 				continue;
 			}
-			else if(tokens[subcounter].find("IF") != string::npos)									//Não imprime a linha do IF
+			else if(tokens[i].find("IF") != string::npos && (tokens[i+1].find("1") != string::npos) && flag)
+			{
+				flag = false;
 				continue;
+			}
+			else if(tokens[subcounter].find("IF") != string::npos)
+			{
+				continue;							//Não imprime a linha do IF
+			}								
+				
 			else if((tokens[i].find(':') != string::npos || tokens[i].find('\n') != string::npos) && tokens[i].find("IF") == string::npos && !flag) //Se for label ou token com quebra de linha, insere apenas o token
 			{
 				temp5 << tokens[i];
@@ -123,11 +131,11 @@ bool fancy(ifstream &srce_file, fstream &no_comments)
 	return srce_file.eof() && no_comments.good(); //Se deu tudo certo, retorna true
 }
 
-int main(int argc, char const *argv[])		//Apenas ambiente de teste, o importante é a função acima
+int main()		//Apenas ambiente de teste, o importante é a função acima
 {
 	ifstream my_file("triangulo.asm");
 	fstream file_out("saida.pre", ios::out|ios::in|ios::trunc);
-	fancy(my_file,file_out);
+	pre_proc(my_file,file_out);
 	my_file.close();
 	file_out.close();
 	return 0;
