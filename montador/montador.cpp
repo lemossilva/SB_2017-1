@@ -84,7 +84,7 @@ int main (int argv, char** argc) {
 
 
 	/** VERIFICA NUMERO ARGUMENTOS*/
-	if(argv <3){  
+	if(argv <2){  
       cout<<"numero de arquivos invalidos"<<endl;
       return 1;
   }
@@ -115,7 +115,7 @@ int main (int argv, char** argc) {
     mem2 = instruc.mem2;
 
 
-    mostra_instrucao(rotulo,op,mem1,mem2);
+    //mostra_instrucao(rotulo,op,mem1,mem2);
 
     /** VERIFICA SE EXISTE ROTULO **/
     if(!rotulo.empty()){
@@ -234,13 +234,13 @@ int main (int argv, char** argc) {
   }*/
 
 
-  cout<<"FIM PRIMEIRA PASSAGEM"<<endl;
+  //cout<<"FIM PRIMEIRA PASSAGEM"<<endl;
 
   myfile.clear();
   myfile.seekg(0, ios::beg);
 
-  string arg2 = argc[2];
-  if(arg2 == "2"){
+  //string arg2 = argc[2];
+  //if(arg2 == "2"){
     /******* SEGUNDA PASSAGEM ***********/
     /***********************************/
 
@@ -375,7 +375,7 @@ int main (int argv, char** argc) {
           }else if(op == "SPACE"){
             int space_tam = atoi(mem1.c_str());
             int cont=1;
-            cout<<"space_tam: "<<space_tam<<endl;
+            
             if(space_tam==0){
               code_to_file.push_back(0);
               realocation.push_back(0);
@@ -392,12 +392,6 @@ int main (int argv, char** argc) {
         }
         
       }
-
-
-
-
-
-      
 
 
       conta_linha++;
@@ -429,7 +423,7 @@ int main (int argv, char** argc) {
       //simbolo1.ender = procura_ts(tabela_simb,simbolo1.rotulo);
       //cout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
       fp_fileout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
-  }
+  //}//fim segunda passagem argc
 
     fp_fileout<<"TABLE REALOCATION"<<endl;
     for(realocation_it = realocation.begin();realocation_it!=realocation.end();realocation_it++){
