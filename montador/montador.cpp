@@ -382,7 +382,7 @@ int main (int argv, char** argc) {
       fp_fileout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
     }
 
-    fp_fileout<<"\nTABLE DEFINITION"<<endl;
+    fp_fileout<<"TABLE DEFINITION"<<endl;
     for(tabela_def_it=tabela_def.begin(); tabela_def_it!=tabela_def.end() ; tabela_def_it++){
       simbolo1 = *tabela_def_it;
       //simbolo1.ender = procura_ts(tabela_simb,simbolo1.rotulo);
@@ -390,11 +390,11 @@ int main (int argv, char** argc) {
       fp_fileout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
   }
 
-    fp_fileout<<"\n"<<"TABLE REALOCATION"<<endl;
+    fp_fileout<<"TABLE REALOCATION"<<endl;
     for(realocation_it = realocation.begin();realocation_it!=realocation.end();realocation_it++){
       fp_fileout<<*realocation_it;
     }
-    fp_fileout<<"\n\n"<<"CODE"<<endl;
+    fp_fileout<<"\nCODE"<<endl;
     for(code_to_file_it=code_to_file.begin(); code_to_file_it!=code_to_file.end(); code_to_file_it++){
       fp_fileout<<*code_to_file_it<<" ";
     }
@@ -448,6 +448,7 @@ struct sep_instr separa_linha(string line, int conta_linha){
       line.erase(0,pos+1); //ja elimina o ;
       if(line.length()>0){  //segundo operando;
         instruc.mem2 = line;
+        line.erase(0,instruc.mem2.length());
       }
     }
     else if(line.length()>0){
@@ -464,6 +465,7 @@ struct sep_instr separa_linha(string line, int conta_linha){
     }
     //*contador_mem = 2;
     if(!line.empty()){
+      cout<<line<<endl;
       cout<<"error: (linha "<<conta_linha<<"): mais de 2 operandos"<<endl;
       exit(1);
     }
