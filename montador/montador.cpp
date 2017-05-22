@@ -56,11 +56,11 @@ void mostra_instrucao(string,string,string,string);
 
 int main (int argv, char** argc) {
 
-  string line,rotulo,op,mem1,mem2;
+  string line,rotulo,op,mem1,mem2,mem_array;
   int contador_mem =0, tam=-1,acha_diret=-1,existe_rotul=1,tamanho_diret=0,conta_linha=1;
 
   int set_BEGIN =0, set_END =0, set_TEXT =0, set_STOP=0;  // checar se tem BEGIN, END e SECTION TEXT
-  int *flag_EXTERN = (int*)calloc(1,sizeof(int));
+  int *flag_EXTERN = (int*)calloc(1,sizeof(int)), compensa_array=0,pos,compensa_array2 =0;
   
 
   struct sep_instr instruc;
@@ -121,6 +121,7 @@ int main (int argv, char** argc) {
     if(!rotulo.empty()){
       /***procura por rotulo na TS**/
       existe_rotul = procura_ts(tabela_simb,rotulo,flag_EXTERN);
+
 
       if(existe_rotul>0){
         cout<<"error (linha "<<conta_linha<<"):"<<rotulo<<" rotulo redefinido"<<endl;
@@ -275,6 +276,16 @@ int main (int argv, char** argc) {
 
       /** Existe operando e ele não é um numero**/
       if(!mem1.empty() && (atoi(mem1.c_str())==0)){
+
+        //*** verifica se foi feita utilização de vetor *////
+        pos = (int)mem1.find("+");
+        compensa_array=0;
+        if(pos>0){
+          mem_array.assign(mem1,pos+1,mem1.length());
+          compensa_array = atoi(mem_array.c_str());
+          mem1.assign(mem1,0,pos);
+        }
+
         //*procurar rotulo na tabela */
         existe_rotul = procura_ts(tabela_simb,mem1,flag_EXTERN);
         //* Caso não seja encontrado */
@@ -285,6 +296,16 @@ int main (int argv, char** argc) {
       }
       /** Segundo operando não é um numero**/
       if(!mem2.empty() && (atoi(mem2.c_str())==0)){
+
+        //*** verifica se foi feita utilização de vetor *////
+        pos = (int)mem2.find("+");
+        compensa_array2=0;
+        if(pos>0){
+          mem_array.assign(mem2,pos+1,mem2.length());
+          compensa_array2 = atoi(mem_array.c_str());
+          mem2.assign(mem2,0,pos);
+        }
+
         //*procurar rotulo na tabela */
         existe_rotul = procura_ts(tabela_simb,mem2,flag_EXTERN);
         //* Caso não seja encontrado */
@@ -310,6 +331,7 @@ int main (int argv, char** argc) {
           //*codigo operando
           if(!mem1.empty()){
             //realocation[contador_mem_old] = 1;
+            
             existe_rotul = procura_ts(tabela_simb,mem1,flag_EXTERN);
             //code_to_file[contador_mem_old] = existe_rotul;
             if(*flag_EXTERN == 1){
@@ -318,12 +340,19 @@ int main (int argv, char** argc) {
               tabela_uso.push_back(simbolo1);
             }
             realocation.push_back(1);
-            code_to_file.push_back(existe_rotul);
+            code_to_file.push_back(existe_rotul+compensa_array);
             //se o rotulo é externo
-            
-
             //contador_mem_old++;
+          }if(!mem2.empty()){
 
+            existe_rotul = procura_ts(tabela_simb,mem1,flag_EXTERN);
+            if(*flag_EXTERN == 1){
+              simbolo1.rotulo = mem1;
+              simbolo1.ender = code_to_file.size();
+              tabela_uso.push_back(simbolo1);
+            }
+            realocation.push_back(1);
+            code_to_file.push_back(existe_rotul+compensa_array2);
           }
         }else{
           cout<<"error: quantidade incorreta de operandos:"<<endl;
@@ -343,6 +372,18 @@ int main (int argv, char** argc) {
             //code_to_file[contador_mem] = atoi(mem1.c_str());
             realocation.push_back(0);
             code_to_file.push_back(atoi(mem1.c_str()));
+          }else if(op == "SPACE"){
+            int space_tam = atoi(mem1.c_str());
+            int cont=1;
+            cout<<"space_tam: "<<space_tam<<endl;
+            if(space_tam==0){
+              code_to_file.push_back(0);
+              realocation.push_back(0);
+            }
+            for(cont=1;cont<=space_tam;cont++){
+              code_to_file.push_back(0);
+              realocation.push_back(0);
+            }
           }else{
             //code_to_file.push_back(0); // retirei por causa do PUBLIC, EXTERN
 
