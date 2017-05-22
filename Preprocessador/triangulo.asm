@@ -1,6 +1,6 @@
 Begin;funciona
 TRIANGULO: EQU 1;isto é uma constante
-BLA: EQU 0
+BLA: EQU 1
 TRETA: EQU 2111111;comentario doido
 OLAR: EQU 3;eae man kk
 SECTION TEXT

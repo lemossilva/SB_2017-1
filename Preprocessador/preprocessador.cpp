@@ -12,7 +12,7 @@ using namespace std;
 bool pre_proc(ifstream &srce_file, fstream &no_comments)
 {
 
-	bool flag;
+	bool flag=false;
 	string lines, words, words2, words3, words4;
 	stringstream temp, temp1, temp2, temp3, temp5;
 	vector<string> equ_list, tokens;
@@ -71,28 +71,24 @@ bool pre_proc(ifstream &srce_file, fstream &no_comments)
 			}
 		}
 
-		for(vector<string>::size_type i = 0; i != tokens.size(); i++)	//Itera pelo vector de tokens
+		for(unsigned int i = 0; i < tokens.size(); i++)	//Itera pelo vector de tokens
 		{
 			short int subcounter = i -1;								//Evita segfault
 			if(subcounter < 0)
 				subcounter = 0;
 
-
-			if(tokens[i].find("IF") != string::npos && (tokens[i+1].find("1") == string::npos))		//Se acha a diretiva IF e ela tem um valor 0 pela frente, seta a flag
+			if(tokens[i].find("IF") != string::npos && (tokens[i+1].find("1") == string::npos) && !flag)		//Se acha a diretiva IF e ela tem um valor 0 pela frente, seta a flag
 			{
 				flag = true;
+				i++;
 				continue;
 			}
 			else if(tokens[i].find("IF") != string::npos && (tokens[i+1].find("1") != string::npos) && flag)
 			{
 				flag = false;
+				i++;
 				continue;
-			}
-			else if(tokens[subcounter].find("IF") != string::npos)
-			{
-				continue;							//Não imprime a linha do IF
-			}								
-				
+			}									
 			else if((tokens[i].find(':') != string::npos || tokens[i].find('\n') != string::npos) && tokens[i].find("IF") == string::npos && !flag) //Se for label ou token com quebra de linha, insere apenas o token
 			{
 				temp5 << tokens[i];
@@ -104,6 +100,17 @@ bool pre_proc(ifstream &srce_file, fstream &no_comments)
 			else if((tokens[i].find('\n') != string::npos) && flag && tokens[subcounter].find("IF") == string::npos) //Se a diretiva de IF for falsa, reseta a flag apenas no final da próxima linha
 			{	
 				flag = false;
+			}
+			else if((tokens[i].find("IF") != string::npos) && flag)
+			{
+				i++;
+				flag = false;
+				continue;
+			}
+			else if((tokens[i].find("IF") != string::npos) && !flag && (tokens[i+1].find("1") != string::npos))
+			{
+				i++;
+				continue;
 			}
 		}
 
