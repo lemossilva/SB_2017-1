@@ -234,7 +234,7 @@ int main (int argv, char** argc) {
   }*/
 
 
-  //cout<<"FIM PRIMEIRA PASSAGEM"<<endl;
+  cout<<"FIM PRIMEIRA PASSAGEM"<<endl;
 
   myfile.clear();
   myfile.seekg(0, ios::beg);
@@ -423,7 +423,7 @@ int main (int argv, char** argc) {
       //simbolo1.ender = procura_ts(tabela_simb,simbolo1.rotulo);
       //cout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
       fp_fileout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
-  //}//fim segunda passagem argc
+  }//fim segunda passagem argc
 
     fp_fileout<<"TABLE REALOCATION"<<endl;
     for(realocation_it = realocation.begin();realocation_it!=realocation.end();realocation_it++){
@@ -434,7 +434,8 @@ int main (int argv, char** argc) {
       fp_fileout<<*code_to_file_it<<" ";
     }
     //cout<<endl;
-  }
+    
+  //}
 
 
   myfile.close();
