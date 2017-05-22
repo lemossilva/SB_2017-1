@@ -80,17 +80,17 @@ int main (int argv, char** argc) {
 
 
 	/** VERIFICA NUMERO ARGUMENTOS*/
-	if(argv <2){  
+	if(argv <3){  
       cout<<"numero de arquivos invalidos"<<endl;
       return 1;
   }
 
     /*** ARQUIVOS   ***/
   ifstream myfile (argc[1]);  //abre arquivo fonte
-  ofstream fp_tab_simb ("Ts.txt");        //abre tabela de simbolos
+  ofstream fp_fileout ("saida_montador.txt");        //abre tabela de simbolos
 
   //verifica se arquivos foram abertos
-  if (!fp_tab_simb.is_open() || ! myfile.is_open()){  
+  if (!fp_fileout.is_open() || ! myfile.is_open()){  
     cout<<"arquivo não abriu"<< endl;
     return 1;
   }
@@ -160,117 +160,145 @@ int main (int argv, char** argc) {
 
   /** MOSTRAR TABELA DE SIMBOLOS **/
   //int i;
-  fp_tab_simb<<"TABLE USE"<<endl;
+  fp_fileout<<"TABLE USE"<<endl;
 
   for(tabela_simb_it = tabela_simb.begin(); tabela_simb_it!=tabela_simb.end(); tabela_simb_it++){
       simbolo1 = *tabela_simb_it;
       cout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
-      fp_tab_simb<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
-    }
+      fp_fileout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
+  }
 
   myfile.clear();
   myfile.seekg(0, ios::beg);
 
+  string arg2 = argc[2];
+  if(arg2 == "2"){
+    /******* SEGUNDA PASSAGEM ***********/
+    /***********************************/
 
-  /******* SEGUNDA PASSAGEM ***********/
-  /***********************************/
+    vector<int> realocation,code_to_file;
+    vector<int>::iterator realocation_it, code_to_file_it;
 
-  int *realocation = (int*)calloc(contador_mem,sizeof(int));
-  int *code_to_file = (int*)calloc(contador_mem,sizeof(int));
+    //int *realocation = (int*)calloc(contador_mem,sizeof(int));
+    //int *code_to_file = (int*)calloc(contador_mem,sizeof(int));
 
-  contador_mem = 0;
+    contador_mem = 0;
 
-  int contador_mem_old = 0;
-  int inst_code;
-
-
-  conta_linha=0;
-  while(getline(myfile,line)){
-
-    /* SEPARA ELEMENTOS DA LINHA */
-    instruc = separa_linha(line);
-    op = instruc.op;
-    mem1 = instruc.mem1;
-    rotulo = instruc.rotulo;
-    mem2 = instruc.mem2;
+    //int contador_mem_old = 0;
+    int inst_code;
 
 
-    /** Existe operando e ele não é um numero**/
-    if(!mem1.empty() && (atoi(mem1.c_str())==0)){
-      //*procurar rotulo na tabela */
-      existe_rotul = procura_ts(tabela_simb,mem1);
-      //* Caso não seja encontrado */
-      if(existe_rotul==-1){
-          cout<<"error (linha "<<conta_linha<<"):rotulo "<<mem1<<" não definido"<<endl;
-          exit(1);
-      }
-    }
-    if(!mem2.empty() && (atoi(mem2.c_str())==0)){
-      //*procurar rotulo na tabela */
-      existe_rotul = procura_ts(tabela_simb,mem2);
-      //* Caso não seja encontrado */
-      if(existe_rotul==-1){
-          cout<<"error (linha "<<conta_linha<<"):rotulo "<<mem2<<" não definido"<<endl;
-          exit(1);
-      }
-    }
+    conta_linha=0;
+    while(getline(myfile,line)){
 
-    //***** procura operação na tabela de instrucoes ***/
-    tam = procura_t_inst(Instr,op,2);
-    if(tam>0){
-      contador_mem = contador_mem+tam;   // ****  incrementa contador de posição com tamanho da instrução
-      //numero de operandos bate?
-      if(tam == 1 + (!mem1.empty()) + (!mem2.empty())){
-        inst_code = procura_t_inst(Instr,op,1);
-        realocation[contador_mem_old] = 0;
-        code_to_file[contador_mem_old] = inst_code;
-        contador_mem_old++;
+      /* SEPARA ELEMENTOS DA LINHA */
+      instruc = separa_linha(line);
+      op = instruc.op;
+      mem1 = instruc.mem1;
+      rotulo = instruc.rotulo;
+      mem2 = instruc.mem2;
 
-        //*codigo operando
-        if(!mem1.empty()){
-          realocation[contador_mem_old] = 1;
-          existe_rotul = procura_ts(tabela_simb,mem1);
-          code_to_file[contador_mem_old] = existe_rotul;
-          contador_mem_old++;
+
+      /** Existe operando e ele não é um numero**/
+      if(!mem1.empty() && (atoi(mem1.c_str())==0)){
+        //*procurar rotulo na tabela */
+        existe_rotul = procura_ts(tabela_simb,mem1);
+        //* Caso não seja encontrado */
+        if(existe_rotul==-1){
+            cout<<"error (linha "<<conta_linha<<"):rotulo "<<mem1<<" não definido"<<endl;
+            exit(1);
         }
       }
-    }else{
-      ///**** EH UMA DIRETIVA
-      acha_diret = procura_tdir(Diret,op,2);
-      if(acha_diret>=0){ ///ACHOOOU
-        //cout<<op<<endl;
-        realocation[contador_mem] = 0;
-        code_to_file[contador_mem] = -1;
-        if(op =="CONST"){
-          code_to_file[contador_mem] = atoi(mem1.c_str());
+      /** Segundo operando não é um numero**/
+      if(!mem2.empty() && (atoi(mem2.c_str())==0)){
+        //*procurar rotulo na tabela */
+        existe_rotul = procura_ts(tabela_simb,mem2);
+        //* Caso não seja encontrado */
+        if(existe_rotul==-1){
+            cout<<"error (linha "<<conta_linha<<"):rotulo "<<mem2<<" não definido"<<endl;
+            exit(1);
         }
-        contador_mem++;
       }
+
+      //***** procura operação na tabela de instrucoes ***/
+      tam = procura_t_inst(Instr,op,2);
+      if(tam>0){
+        contador_mem = contador_mem+tam;   // ****  incrementa contador de posição com tamanho da instrução
+        //numero de operandos bate?
+        if(tam == 1 + (!mem1.empty()) + (!mem2.empty())){
+          inst_code = procura_t_inst(Instr,op,1);
+          realocation.push_back(0);
+          code_to_file.push_back(inst_code);
+          //realocation[contador_mem_old] = 0;
+          //code_to_file[contador_mem_old] = inst_code;
+          //contador_mem_old++;
+
+          //*codigo operando
+          if(!mem1.empty()){
+            //realocation[contador_mem_old] = 1;
+            existe_rotul = procura_ts(tabela_simb,mem1);
+            //code_to_file[contador_mem_old] = existe_rotul;
+            realocation.push_back(1);
+            code_to_file.push_back(existe_rotul);
+            
+            //contador_mem_old++;
+
+
+
+          }
+        }
+      }else{
+        ///**** EH UMA DIRETIVA
+        acha_diret = procura_tdir(Diret,op,2);
+        if(acha_diret>=0){ ///ACHOOOU
+          //realocation[contador_mem] = 0;
+          //code_to_file[contador_mem] = -1;
+          realocation.push_back(0);
+          if(op =="CONST"){
+            //code_to_file[contador_mem] = atoi(mem1.c_str());
+            code_to_file.push_back(atoi(mem1.c_str()));
+          }else{
+            code_to_file.push_back(-1);
+          }
+          //contador_mem++;
+        }
+        
+      }
+
+
+
       
+
+
+      conta_linha++;
     }
 
+    /*int i=0;
+    cout<<"realocation: "<<endl;
+    for(;i<=contador_mem;i++){
+      cout<<""<<realocation[i];
+    }
+    cout<<endl;
+    cout<<"codes: "<<endl;
+    for(i=0;i<=contador_mem;i++){
+      cout<<" "<<code_to_file[i];
+    }
+    cout<<endl;*/
 
-
-    
-
-
-    conta_linha++;
+    fp_fileout<<"\n"<<"TABLE REALOCATION"<<endl;
+    for(realocation_it = realocation.begin();realocation_it!=realocation.end();realocation_it++){
+      fp_fileout<<*realocation_it;
+    }
+    fp_fileout<<"\n\n"<<"CODE"<<endl;
+    for(code_to_file_it=code_to_file.begin(); code_to_file_it!=code_to_file.end(); code_to_file_it++){
+      fp_fileout<<*code_to_file_it<<" ";
+    }
+    //cout<<endl;
   }
 
-  int i=0;
-  cout<<"realocation: "<<endl;
-  for(;i<=contador_mem;i++){
-    cout<<""<<realocation[i];
-  }
-  cout<<endl;
-  cout<<"codes: "<<endl;
-  for(i=0;i<=contador_mem;i++){
-    cout<<" "<<code_to_file[i];
-  }
-  cout<<endl;
 
   myfile.close();
-  fp_tab_simb.close();
+  fp_fileout.close();
 
   free(Instr);
   free(Diret);
