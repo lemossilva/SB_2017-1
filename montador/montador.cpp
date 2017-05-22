@@ -36,7 +36,7 @@ typedef struct instr_format{
 } instr_format;
 
 // recebe linha e ponteiro de error, separa 4 tolkens: rotulo, instrucao, operando1, operando2
-struct sep_instr separa_linha(string, int);
+struct sep_instr separa_linha(string, int, int*); // ponteiro de error
 
 struct instr_format* create_instr(struct instr_format*);
 
@@ -44,6 +44,13 @@ struct diret_format* create_diret(struct diret_format*);
 
 
 int procura_t_inst(struct instr_format*, string,int);
+
+//verifica se a o formato dos tolkens da instrução são validos
+int checa_tolken(string,string,string,string, struct instr_format*, struct diret_format*);
+
+//verifica alguns erros sintaticos, outros podem estar na main
+//checa_alguns_sintaticos(rotulo,op,mem1,mem2,Instr,Diret)
+int checa_alguns_sintaticos(string,string,string,string,struct instr_format*, struct diret_format*);
 
 int  procura_tdir(diret_format*,string,int);
 
@@ -55,13 +62,43 @@ int executa_diretiva(string,string);
 
 void mostra_instrucao(string,string,string,string);
 
+int chama_montador(string,string);
+
 int main (int argv, char** argc) {
+
+  // VERIFICA NUMERO ARGUMENTOS***
+  if(argv <3){  
+      cout<<"numero de arquivos invalidos"<<endl;
+      return 1;
+  }
+  string nome_saida = argc[2];
+  string nome_entrada = argc[1];
+  int a = chama_montador(nome_entrada,nome_saida);
+
+  if(a != 0){
+    cout<<"error durante montagem"<<endl;
+    exit(1);
+  }
+  return 0;
+}
+
+int chama_montador(string nome_entrada,string nome_saida){
+//int main(int argv, char** argc){
+  // VERIFICA NUMERO ARGUMENTOS***
+  /*if(argv <3){  
+      cout<<"numero de arquivos invalidos"<<endl;
+      return 1;
+  }
+
+  string nome_saida = argc[2];
+  string nome_entrada = argc[1];*/
 
   string line,rotulo,op,mem1,mem2,mem_array,temp_mem;
   int contador_mem =0, tam=-1,acha_diret=-1,existe_rotul=1,tamanho_diret=0,conta_linha=1;
 
   int set_BEGIN =0, set_END =0, set_TEXT =0, set_STOP=0;//,set_DATA;  // checar se tem BEGIN, END e SECTION TEXT
   int *flag_EXTERN = (int*)calloc(1,sizeof(int)), compensa_array=0,pos,compensa_array2 =0,temp_memi=0;
+  int *flag_ERROR = (int*)calloc(1,sizeof(int));
 
   stringstream converte_hex;
   ostringstream convert; 
@@ -86,16 +123,11 @@ int main (int argv, char** argc) {
   Diret = create_diret(Diret);  //cria tabela de instruções
 
 
-
-	/** VERIFICA NUMERO ARGUMENTOS*/
-	if(argv <2){  
-      cout<<"numero de arquivos invalidos"<<endl;
-      return 1;
-  }
-
     /*** ARQUIVOS   ***/
-  ifstream myfile (argc[1]);  //abre arquivo fonte
-  ofstream fp_fileout ("saida_montador.txt");        //abre tabela de simbolos
+  ifstream myfile (nome_entrada.c_str());  //abre arquivo fonte
+  //nome_saida = argc[2];
+  nome_saida = nome_saida;
+  ofstream fp_fileout (nome_saida.c_str());        //abre tabela de simbolos
 
   //verifica se arquivos foram abertos
   if (!fp_fileout.is_open() || ! myfile.is_open()){  
@@ -110,7 +142,11 @@ int main (int argv, char** argc) {
   while ( getline (myfile,line) ){
     
     /*** FUNCAO QUE SEPARA ELEMENTOS LINHA **/
-    instruc = separa_linha(line,conta_linha);
+    instruc = separa_linha(line,conta_linha,flag_ERROR);
+    if(*flag_ERROR == 1){
+      cout<<"linha "<<conta_linha<<" :\""<<line<<"\""<<endl;
+      exit(1);
+    }
 
 
     op = instruc.op;
@@ -118,7 +154,27 @@ int main (int argv, char** argc) {
     rotulo = instruc.rotulo;
     mem2 = instruc.mem2;
 
+     if(checa_tolken(rotulo,op,mem1,mem2,Instr,Diret)){
+      cout<<"linha "<<conta_linha<<" :\""<<line<<"\""<<endl;
+      exit(1);
+     }
 
+     /*if(op == "SECTION"){
+      if(mem1 != "TEXT" && mem1 != "DATA"){
+        cout<<"erro sintatico, seção invalida : \""<<mem1<<"\""<<endl;
+        cout<<"linha "<<conta_linha<<" :\""<<line<<"\""<<endl;
+        exit(1);
+      }
+      if(!mem2.empty()){
+        cout<<"erro sintatico, mais de um argumento: \""<<mem2<<"\""<<endl;
+        cout<<"linha "<<conta_linha<<" :\""<<line<<"\""<<endl;
+        exit(1);
+      } 
+     } */ 
+    if(checa_alguns_sintaticos(rotulo,op,mem1,mem2,Instr,Diret)){
+      cout<<"linha "<<conta_linha<<" :\""<<line<<"\""<<endl;
+      exit(1);
+    }
     //mostra_instrucao(rotulo,op,mem1,mem2);
 
     /** VERIFICA SE EXISTE ROTULO **/
@@ -128,7 +184,7 @@ int main (int argv, char** argc) {
 
 
       if(existe_rotul>0){
-        cout<<"error (linha "<<conta_linha<<"):"<<rotulo<<" rotulo redefinido"<<endl;
+        cout<<"error semantico, (linha "<<conta_linha<<"):"<<rotulo<<" rotulo redefinido"<<endl;
         exit(1);
       }
       else{
@@ -164,7 +220,7 @@ int main (int argv, char** argc) {
           set_TEXT = 1;
         }else if(op == "SECTION" && mem1 == "DATA"){
           if(set_TEXT==0){
-            cout<<"erro: SECTION DATA antes de SECTION TEXT:"<<endl;
+            cout<<"erro semantico: SECTION DATA antes de SECTION TEXT:"<<endl;
             cout<<"linha "<<conta_linha<<": "<<line<<endl;
             exit(1);
           }
@@ -185,6 +241,9 @@ int main (int argv, char** argc) {
       }
       
     }
+    if(op == "STOP"){
+      set_STOP =1;
+    }
 
     op.clear();
     mem1.clear();
@@ -192,9 +251,7 @@ int main (int argv, char** argc) {
     mem2.clear();
 
     conta_linha++;
-    if(op == "STOP" && !set_STOP){
-      set_STOP =1;
-    }
+    
   }
 
   
@@ -211,7 +268,7 @@ int main (int argv, char** argc) {
   }
   
   if(!set_STOP && !set_BEGIN && !set_END){
-    cout<<"erro: falta de STOP"<<endl;
+    cout<<"erro: falta de STOP: "<<endl;
     exit(1);
   }
 
@@ -219,12 +276,12 @@ int main (int argv, char** argc) {
 
   /** MOSTRAR TABELA DE SIMBOLOS **/
   //int i;
-  //fp_fileout<<"SIMBOL TABLE"<<endl;
+  //cout<<"SIMBOL TABLE"<<endl;
 
   /*for(tabela_simb_it = tabela_simb.begin(); tabela_simb_it!=tabela_simb.end(); tabela_simb_it++){
       simbolo1 = *tabela_simb_it;
-      //cout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
-      fp_fileout<<simbolo1.rotulo<<" "<<simbolo1.ender<<" "<<simbolo1.rot_extern<<endl;
+      cout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
+      //fp_fileout<<simbolo1.rotulo<<" "<<simbolo1.ender<<" "<<simbolo1.rot_extern<<endl;
   }*/
 
   //fp_fileout<<"\nDEFINITION TABLE"<<endl;
@@ -271,14 +328,14 @@ int main (int argv, char** argc) {
     while(getline(myfile,line)){
 
       /* SEPARA ELEMENTOS DA LINHA */
-      instruc = separa_linha(line,conta_linha);
+      instruc = separa_linha(line,conta_linha,flag_ERROR);
 
       while(instruc.op == "SECTION" || instruc.op == "BEGIN"){
         // não gera codigo executavel
         // avaliar essas diretivas aqui
         getline(myfile,line);
         conta_linha++;
-        instruc = separa_linha(line,conta_linha);
+        instruc = separa_linha(line,conta_linha,flag_ERROR);
       }
       op = instruc.op;
       mem1 = instruc.mem1;
@@ -294,7 +351,7 @@ int main (int argv, char** argc) {
         converte_hex>> std::hex>> temp_memi;
         convert << temp_memi;
         mem1 = convert.str();
-        cout<<"convert: "<<mem1;
+        //cout<<"convert: "<<mem1;
       }
       /** Existe operando e ele não é um numero**/
       if(!mem1.empty() && (atoi(mem1.c_str())==0)){
@@ -467,6 +524,7 @@ int main (int argv, char** argc) {
   free(Instr);
   free(Diret);
   free(flag_EXTERN);
+  free(flag_ERROR);
 
 
   return 0;
@@ -475,17 +533,22 @@ int main (int argv, char** argc) {
 
 
 
-struct sep_instr separa_linha(string line, int conta_linha){
+struct sep_instr separa_linha(string line, int conta_linha,int* error){
 
   struct sep_instr instruc;
 
   int pos;
-
+  *error =0;
 
    pos = (int)line.find(":");
     if(pos > 0){
       instruc.rotulo.assign(line,0,pos);
       line.erase(0,pos+1); //eliminar também o espaço após ':'
+      if((int)line.find(":")>0){
+        cout<<"erro sintatico, dois rotulos na mesma linha"<<endl;
+        *error = 1;
+        return instruc;
+      }
     }
 
     /**PROCURA OPERAÇÃO**/
@@ -638,6 +701,7 @@ struct diret_format* create_diret(struct diret_format* Diret){
   return Diret;
 }
 
+// recebe tabela de diretivas, nome a ser procurado e flag nao usada
 int procura_tdir(diret_format *Diret,string diretiva,int flag){
 
   int i=0;
@@ -688,4 +752,128 @@ int executa_diretiva(string diretiva,string operando){
   }
   return tam;
 
+}
+
+int checa_tolken(string rotulo,string op,string mem1,string mem2, struct instr_format* Instr, struct diret_format *Diret){
+
+  int flag, teste=0;
+  if(!rotulo.empty()){
+    //* checa se rotulo possui nome de instrucao *//
+    flag = procura_t_inst(Instr,rotulo,1);
+    if(flag>=0){
+      cout<<"erro lexico, rotulo \""<<rotulo<<"\" possui nome reservado:"<<endl;
+      return 1;
+    }
+    //* checa se rotulo possui nome de diretiva */
+    flag = procura_tdir(Diret,rotulo,0);
+    if(flag>=0){
+      cout<<"erro lexico, rotulo \""<<rotulo<<"\" possui nome reservado:"<<endl;
+      return 1;
+    }
+    // verifica se rotulo é text ou data
+    if(rotulo=="TEXT" || rotulo == "DATA"){
+      cout<<"erro lexico, rotulo \""<<rotulo<<"\" possui nome reservado:"<<endl;
+      return 1;
+    } 
+
+     //** CHECA SE TEM COMECA COM NUMERO**//
+    teste = atoi(rotulo.c_str());
+    if(teste!=0){
+      cout<<"erro lexico, argumento \""<<rotulo<<"\" comeca com numero:"<<teste<<endl;
+      return 1;
+    }
+    teste=(int)rotulo.find("0");
+    if(teste==0){
+      cout<<"erro lexico, argumento \""<<rotulo<<"\" comeca com numero:"<<teste<<endl;
+      return 1;
+    }
+
+    if(rotulo.length()>50){
+      cout<<"erro lexico, rotulo \""<<rotulo<<"\" maior que o limite de 50 caracteres:\n"<<endl;
+      return 1;
+    }
+
+
+  }
+  if(!op.empty()){
+
+  }
+  if(!mem1.empty()){
+    //* checa se rotulo possui nome de instrucao *//
+    flag = procura_t_inst(Instr,mem1,1);
+    if(flag>=0){
+      cout<<"erro lexico, argumento \""<<mem1<<"\" possui nome reservado:"<<endl;
+      return 1;
+    }
+    //* checa se rotulo possui nome de diretiva *//
+    //* checa se rotulo possui nome de diretiva */
+    flag = procura_tdir(Diret,mem1,0);
+    if(flag>=0){
+      cout<<"erro lexico, argumento \""<<mem1<<"\" possui nome reservado:"<<endl;
+      return 1;
+    }
+
+
+
+  }
+  if(!mem2.empty()){
+    //* POSSUI NOME DE INSTRUCAO ???? **///
+    flag = procura_t_inst(Instr,mem2,1);
+    if(flag>=0){
+      cout<<"erro lexico, argumento \""<<mem2<<"\" possui nome reservado:"<<endl;
+      return 1;
+    }
+    //* checa se rotulo possui nome de diretiva */
+    flag = procura_tdir(Diret,mem2,0);
+    if(flag>=0){
+      cout<<"erro lexico, rargumento \""<<mem2<<"\" possui nome reservado:"<<endl;
+      return 1;
+    }
+
+  }
+
+  return 0;
+
+}
+
+int checa_alguns_sintaticos(string rotulo,string op,string mem1,string mem2,struct instr_format* Instr, struct diret_format* Diret){
+
+  int pos;
+
+  pos = mem1.find(" ");
+  if(pos>=0){
+    cout<<"erro sintatico, mais de um operando \""<<mem1<<"\""<<endl;
+    return 1;
+  }
+  pos = mem2.find(" ");
+  if(pos>=0){
+    cout<<"erro sintatico, mais de um operando \""<<mem2<<"\""<<endl;
+    return 1;
+  }
+  if(op == "SECTION"){
+    if(mem1 != "TEXT" && mem1 != "DATA"){
+      cout<<"erro sintatico, seção invalida :x \""<<mem1<<"\""<<endl;
+      return 1;
+    }
+    if(!mem2.empty()){
+      cout<<"erro sintatico, mais de um argumento: \""<<mem2<<"\""<<endl;
+      return 1;
+    } 
+  }
+  if(op == "CONST" || op == "SPACE"){
+    if(!mem2.empty()){
+      cout<<"erro sintatico, mais de um argumento: \""<<mem2<<"\""<<endl;
+      return 1;
+    }
+  }
+  if(op == "BEGIN" || op == "END"){
+    if(!mem1.empty()){
+      cout<<"erro sintatico, quantidade invalida de argumentos: \""<<mem1<<"\""<<endl;
+      return 1;
+    }
+  }
+
+
+
+  return 0;
 }
