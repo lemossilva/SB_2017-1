@@ -4,7 +4,6 @@ g++ -Wall -ansi montador.cpp -o montador
 
 se somente primeira passagem:
 
-./montador saida_mole.pre 1
+executando:
 
-se duas passagens:
-./montador saida_mole.pre 2
+$ ./montador arquivo_entrada  arquivo_saida.o
