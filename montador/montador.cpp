@@ -126,7 +126,7 @@ int chama_montador(string nome_entrada,string nome_saida){
     /*** ARQUIVOS   ***/
   ifstream myfile (nome_entrada.c_str());  //abre arquivo fonte
   //nome_saida = argc[2];
-  nome_saida = nome_saida;
+  nome_saida = nome_saida + ".o";
   ofstream fp_fileout (nome_saida.c_str());        //abre tabela de simbolos
 
   //verifica se arquivos foram abertos
