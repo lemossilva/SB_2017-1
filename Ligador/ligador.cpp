@@ -29,7 +29,6 @@ bool linker(int nfile, vector<ifstream*> object_vector, ofstream &output)
 		vector<string> table_use, table_gd, code;
 		vector<int> realocation;
 		short int counter = 0;
-		cout << "arquivo: " << i << endl;
 		while(getline(*object_vector[i],lines))		//Percorre linha a linha o arquivo objeto
 		{	
 			if(lines.find("TABLE USE") != string::npos)		//Achou a tabela de uso
@@ -113,6 +112,7 @@ bool linker(int nfile, vector<ifstream*> object_vector, ofstream &output)
 		for(int j = 0; j < table_use_g[i].size(); j+=2)
 		{
 			//cout << table_use_g[i][j] << ' ';
+			bool flag_achou = false;
 			for(int g = 0; g < table_gd_g.size(); g++)
 			{
 				for(int k = 0; k < table_gd_g[g].size(); k+=2)
@@ -122,9 +122,15 @@ bool linker(int nfile, vector<ifstream*> object_vector, ofstream &output)
 						//cout << table_gd_g[g][k] << "  achou" << endl;
 						int temp = stoi(code_g[i][stoi(table_use_g[i][j+1])]) + stoi(table_gd_g[g][k+1]);
 						code_g[i][stoi(table_use_g[i][j+1])] = to_string(temp);
+						flag_achou = true;
 						//cout << code_g[i][stoi(table_use_g[i][j+1])] << " conteudo " << endl;
 					}
 				}
+			}
+			if(!flag_achou)
+			{
+				cerr << "Erro de ligação: Símbolo " << table_use_g[i][j] << " não definido" << endl;
+				return false;
 			}
 		}
 	}
@@ -156,12 +162,14 @@ int main(int argc, char const *argv[])
 {
 	vector<ifstream*> files;
 
-	if(argc < 4 || argc > 5)		//Se forem 2 arquivos de entrada, argc = 4. Se forem 3 arquivos de entrada, argc = 5;
+	if(argc < 4 || argc > 5) //Se forem 2 arquivos de entrada, argc = 4. Se forem 3 arquivos de entrada, argc = 5
+	{
 		cerr << "Número inválido de argumentos" << endl;
+		return -1;
+	}		
 
 	if(argc == 4)					//Abre os arquivos
 	{
-		cout << argv[1] << endl;
 		object_file.open(argv[1]);
 		files.push_back(&object_file);
 		object_file2.open(argv[2]);
@@ -169,11 +177,11 @@ int main(int argc, char const *argv[])
 	}
 	else if(argc == 5)
 	{
-		object_file.open(argv[1])
+		object_file.open(argv[1]);
 		files.push_back(&object_file);
-		object_file2.open(argv[2])
+		object_file2.open(argv[2]);
 		files.push_back(&object_file2);
-		object_file3.open(argv[3])
+		object_file3.open(argv[3]);
 		files.push_back(&object_file3);
 	}
 
@@ -181,11 +189,17 @@ int main(int argc, char const *argv[])
 	{
 		string filename(argv[i]);
 		if(filename.substr(filename.find(".")+1) != "o")
+		{
 			cerr << "Extensão errada para arquivo de entrada (default: .o)" << endl;
+			return -1;
+		}
 	}
 	string filename(argv[argc-1]);	//Confere se a extensão do arquivo de saída está correta
 	if(filename.substr(filename.find(".")+1) != "e")
+	{
 		cerr << "Extensão errada para arquivo de saída (default: .e)" << endl;
+		return -1;
+	}
 	ofstream exe_file(argv[argc-1], ios::out|ios::trunc); //Abre o arquivo de saída
 
 
