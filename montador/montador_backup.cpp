@@ -19,7 +19,7 @@ typedef struct sep_instr{
 
 typedef struct st_tab_simb{
       string rotulo;
-      int ender;
+      int ender,rot_extern;
 } st_tab_simb;
 
 typedef struct diret_format{
@@ -34,7 +34,8 @@ typedef struct instr_format{
 
 } instr_format;
 
-struct sep_instr separa_linha(string);
+// recebe linha e ponteiro de error, separa 4 tolkens: rotulo, instrucao, operando1, operando2
+struct sep_instr separa_linha(string, int);
 
 struct instr_format* create_instr(struct instr_format*);
 
@@ -46,7 +47,7 @@ int procura_t_inst(struct instr_format*, string,int);
 int  procura_tdir(diret_format*,string,int);
 
 /** função que procura rotulo na tabela de simbolos, recebe tabela,rotulo e tamanho da tabela */
-int procura_ts(vector<st_tab_simb>, string);
+int procura_ts(vector<st_tab_simb>, string, int*);
 
 /* recebe diretiva, retorna seu tamanho alocado*/
 int executa_diretiva(string,string);
@@ -58,11 +59,14 @@ int main (int argv, char** argc) {
   string line,rotulo,op,mem1,mem2;
   int contador_mem =0, tam=-1,acha_diret=-1,existe_rotul=1,tamanho_diret=0,conta_linha=1;
 
+  int set_BEGIN =0, set_END =0, set_TEXT =0, set_STOP=0;  // checar se tem BEGIN, END e SECTION TEXT
+  int *flag_EXTERN = (int*)calloc(1,sizeof(int));
+  
 
   struct sep_instr instruc;
   //struct st_tab_simb *tabela_simb = NULL,*tab_temp=NULL;
-  vector<st_tab_simb> tabela_simb;
-  vector<st_tab_simb>::iterator tabela_simb_it;
+  vector<st_tab_simb> tabela_simb,tabela_def, tabela_uso;
+  vector<st_tab_simb>::iterator tabela_simb_it,tabela_def_it,tabela_uso_it;
   st_tab_simb simbolo1;
 
   //struct instr_format *Instr =NULL; //tabela de instruções
@@ -95,26 +99,28 @@ int main (int argv, char** argc) {
     return 1;
   }
 
+  /****         PRIMEIRA PASSAGEM *******/
 
   /* Enquanto arquivo não chegar ao fim, pegue uma linha*/
   /********************************/
   while ( getline (myfile,line) ){
     
     /*** FUNCAO QUE SEPARA ELEMENTOS LINHA **/
-    instruc = separa_linha(line);
+    instruc = separa_linha(line,conta_linha);
+
 
     op = instruc.op;
     mem1 = instruc.mem1;
     rotulo = instruc.rotulo;
     mem2 = instruc.mem2;
 
-    //mostra_instrucao(rotulo,op,mem1,mem2);
 
-    
+    mostra_instrucao(rotulo,op,mem1,mem2);
+
     /** VERIFICA SE EXISTE ROTULO **/
     if(!rotulo.empty()){
       /***procura por rotulo na TS**/
-      existe_rotul = procura_ts(tabela_simb,rotulo);
+      existe_rotul = procura_ts(tabela_simb,rotulo,flag_EXTERN);
 
       if(existe_rotul>0){
         cout<<"error (linha "<<conta_linha<<"):"<<rotulo<<" rotulo redefinido"<<endl;
@@ -123,6 +129,10 @@ int main (int argv, char** argc) {
       else{
         simbolo1.rotulo = rotulo;
         simbolo1.ender = contador_mem;
+        simbolo1.rot_extern = 0;
+        if(op=="EXTERN"){
+          simbolo1.rot_extern =1;
+        }
         tabela_simb.push_back(simbolo1);    //insere rotulo e posição  na tabela de simbolos
         
       }
@@ -138,6 +148,22 @@ int main (int argv, char** argc) {
       acha_diret = procura_tdir(Diret,op,2);
       if(acha_diret>=0){ ///ACHOOOU
         //*executa diretiva*//
+        if(op =="BEGIN"){
+          //cout<<"existe BEGIN"<<endl;
+          set_BEGIN =1;
+        }else if(op == "END"){
+          //cout<<"existe END"<<endl;
+          set_END = 1;
+        }else if(op == "SECTION" && mem1 == "TEXT"){
+          //cout<<"there is a TEXT SECTION"<<endl;
+          set_TEXT = 1;
+        }else if(op == "PUBLIC"){
+          simbolo1.rotulo = mem1;
+          simbolo1.ender = -1;
+          simbolo1.rot_extern = -1;
+          tabela_def.push_back(simbolo1);
+        }
+
         tamanho_diret = executa_diretiva(op,mem1);
         contador_mem= contador_mem + tamanho_diret;
       }
@@ -154,19 +180,60 @@ int main (int argv, char** argc) {
     mem2.clear();
 
     conta_linha++;
+    if(op == "STOP" && !set_STOP){
+      set_STOP =1;
+    }
+  }
+
+  
+  if(set_BEGIN && !set_END){
+    cout<<"erro: falta de 'END'"<<endl;
+    exit(1);
+  }else if(set_END && !set_BEGIN){
+    cout<<"erro: falta de 'BEGIN'"<<endl;
+    exit(1);
+  }
+  if(!set_TEXT){
+    cout<<"erro: falta de SECTION TEXT"<<endl;
+    exit(1);
+  }
+  
+  if(!set_STOP && !set_BEGIN && !set_END){
+    cout<<"erro: falta de STOP"<<endl;
+    exit(1);
   }
 
   
 
   /** MOSTRAR TABELA DE SIMBOLOS **/
   //int i;
-  fp_fileout<<"TABLE USE"<<endl;
+  //fp_fileout<<"SIMBOL TABLE"<<endl;
 
-  for(tabela_simb_it = tabela_simb.begin(); tabela_simb_it!=tabela_simb.end(); tabela_simb_it++){
+  /*for(tabela_simb_it = tabela_simb.begin(); tabela_simb_it!=tabela_simb.end(); tabela_simb_it++){
       simbolo1 = *tabela_simb_it;
-      cout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
-      fp_fileout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
+      //cout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
+      fp_fileout<<simbolo1.rotulo<<" "<<simbolo1.ender<<" "<<simbolo1.rot_extern<<endl;
+  }*/
+
+  //fp_fileout<<"\nDEFINITION TABLE"<<endl;
+
+  for(tabela_def_it=tabela_def.begin(); tabela_def_it!=tabela_def.end() ; tabela_def_it++){
+      tabela_def_it->ender = procura_ts(tabela_simb,simbolo1.rotulo,flag_EXTERN);
+      simbolo1 = *tabela_def_it;
+      tabela_def_it->ender = procura_ts(tabela_simb,simbolo1.rotulo,flag_EXTERN);
+      //cout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
+      //fp_fileout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
   }
+
+  /*for(tabela_def_it=tabela_def.begin(); tabela_def_it!=tabela_def.end() ; tabela_def_it++){
+      simbolo1 = *tabela_def_it;
+      //simbolo1.ender = procura_ts(tabela_simb,simbolo1.rotulo);
+      //cout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
+      fp_fileout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
+  }*/
+
+
+  cout<<"FIM PRIMEIRA PASSAGEM"<<endl;
 
   myfile.clear();
   myfile.seekg(0, ios::beg);
@@ -188,21 +255,28 @@ int main (int argv, char** argc) {
     int inst_code;
 
 
-    conta_linha=0;
+    conta_linha=1;
     while(getline(myfile,line)){
 
       /* SEPARA ELEMENTOS DA LINHA */
-      instruc = separa_linha(line);
+      instruc = separa_linha(line,conta_linha);
+
+      while(instruc.op == "SECTION" || instruc.op == "BEGIN"){
+        // não gera codigo executavel
+        // avaliar essas diretivas aqui
+        getline(myfile,line);
+        conta_linha++;
+        instruc = separa_linha(line,conta_linha);
+      }
       op = instruc.op;
       mem1 = instruc.mem1;
       rotulo = instruc.rotulo;
       mem2 = instruc.mem2;
 
-
       /** Existe operando e ele não é um numero**/
       if(!mem1.empty() && (atoi(mem1.c_str())==0)){
         //*procurar rotulo na tabela */
-        existe_rotul = procura_ts(tabela_simb,mem1);
+        existe_rotul = procura_ts(tabela_simb,mem1,flag_EXTERN);
         //* Caso não seja encontrado */
         if(existe_rotul==-1){
             cout<<"error (linha "<<conta_linha<<"):rotulo "<<mem1<<" não definido"<<endl;
@@ -212,7 +286,7 @@ int main (int argv, char** argc) {
       /** Segundo operando não é um numero**/
       if(!mem2.empty() && (atoi(mem2.c_str())==0)){
         //*procurar rotulo na tabela */
-        existe_rotul = procura_ts(tabela_simb,mem2);
+        existe_rotul = procura_ts(tabela_simb,mem2,flag_EXTERN);
         //* Caso não seja encontrado */
         if(existe_rotul==-1){
             cout<<"error (linha "<<conta_linha<<"):rotulo "<<mem2<<" não definido"<<endl;
@@ -236,34 +310,49 @@ int main (int argv, char** argc) {
           //*codigo operando
           if(!mem1.empty()){
             //realocation[contador_mem_old] = 1;
-            existe_rotul = procura_ts(tabela_simb,mem1);
+            existe_rotul = procura_ts(tabela_simb,mem1,flag_EXTERN);
             //code_to_file[contador_mem_old] = existe_rotul;
+            if(*flag_EXTERN == 1){
+              simbolo1.rotulo = mem1;
+              simbolo1.ender = code_to_file.size();
+              tabela_uso.push_back(simbolo1);
+            }
             realocation.push_back(1);
             code_to_file.push_back(existe_rotul);
+            //se o rotulo é externo
             
+
             //contador_mem_old++;
 
-
-
           }
+        }else{
+          cout<<"error: quantidade incorreta de operandos:"<<endl;
+          cout<<"linha "<<conta_linha<<" : '"<<line<<"'"<<endl;
+          exit(1);
         }
-      }else{
+
+      }else if(op!= "END"){
         ///**** EH UMA DIRETIVA
+        //cout<<"diretiva :"<<op<<endl;
         acha_diret = procura_tdir(Diret,op,2);
         if(acha_diret>=0){ ///ACHOOOU
           //realocation[contador_mem] = 0;
           //code_to_file[contador_mem] = -1;
-          realocation.push_back(0);
+          
           if(op =="CONST"){
             //code_to_file[contador_mem] = atoi(mem1.c_str());
+            realocation.push_back(0);
             code_to_file.push_back(atoi(mem1.c_str()));
           }else{
-            code_to_file.push_back(-1);
+            //code_to_file.push_back(0); // retirei por causa do PUBLIC, EXTERN
+
           }
           //contador_mem++;
         }
         
       }
+
+
 
 
 
@@ -285,11 +374,27 @@ int main (int argv, char** argc) {
     }
     cout<<endl;*/
 
-    fp_fileout<<"\n"<<"TABLE REALOCATION"<<endl;
+
+
+    fp_fileout<<"TABLE USE"<<endl;
+    for(tabela_uso_it=tabela_uso.begin(); tabela_uso_it!=tabela_uso.end(); tabela_uso_it++){
+      simbolo1 = *tabela_uso_it;
+      fp_fileout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
+    }
+
+    fp_fileout<<"TABLE DEFINITION"<<endl;
+    for(tabela_def_it=tabela_def.begin(); tabela_def_it!=tabela_def.end() ; tabela_def_it++){
+      simbolo1 = *tabela_def_it;
+      //simbolo1.ender = procura_ts(tabela_simb,simbolo1.rotulo);
+      //cout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
+      fp_fileout<<simbolo1.rotulo<<" "<<simbolo1.ender<<endl;
+  }
+
+    fp_fileout<<"TABLE REALOCATION"<<endl;
     for(realocation_it = realocation.begin();realocation_it!=realocation.end();realocation_it++){
       fp_fileout<<*realocation_it;
     }
-    fp_fileout<<"\n\n"<<"CODE"<<endl;
+    fp_fileout<<"\nCODE"<<endl;
     for(code_to_file_it=code_to_file.begin(); code_to_file_it!=code_to_file.end(); code_to_file_it++){
       fp_fileout<<*code_to_file_it<<" ";
     }
@@ -302,6 +407,7 @@ int main (int argv, char** argc) {
 
   free(Instr);
   free(Diret);
+  free(flag_EXTERN);
 
 
   return 0;
@@ -310,7 +416,7 @@ int main (int argv, char** argc) {
 
 
 
-struct sep_instr separa_linha(string line){
+struct sep_instr separa_linha(string line, int conta_linha){
 
   struct sep_instr instruc;
 
@@ -342,14 +448,27 @@ struct sep_instr separa_linha(string line){
       line.erase(0,pos+1); //ja elimina o ;
       if(line.length()>0){  //segundo operando;
         instruc.mem2 = line;
+        line.erase(0,instruc.mem2.length());
       }
     }
     else if(line.length()>0){
-      instruc.mem1 = line;
-      line.erase(0,line.length());
+      pos = (int)line.find(" ");
+      if(pos<0){
+        instruc.mem1 = line;
+        line.erase(0,pos);
+      }else{
+        instruc.mem1.assign(line,0,pos);
+        line.erase(0,pos+1); //ja elimina o " "
+        instruc.mem2.assign(line,0,pos);
+        line.erase(0,pos);
+      }
     }
-
     //*contador_mem = 2;
+    if(!line.empty()){
+      cout<<line<<endl;
+      cout<<"error: (linha "<<conta_linha<<"): mais de 2 operandos"<<endl;
+      exit(1);
+    }
 
   return instruc;
 }
@@ -430,7 +549,7 @@ struct diret_format* create_diret(struct diret_format* Diret){
   Diret[2].rotulo = "CONST";
   Diret[3].rotulo = "EQU";
   Diret[4].rotulo = "IF";
-  Diret[5].rotulo = "PLUBIC";
+  Diret[5].rotulo = "PUBLIC";
   Diret[6].rotulo = "EXTERN";
   Diret[7].rotulo = "BEGIN";
   Diret[8].rotulo = "END";
@@ -474,18 +593,20 @@ int procura_tdir(diret_format *Diret,string diretiva,int flag){
 
 }
 
-int procura_ts(vector<st_tab_simb> tabela_simb, string rotulo){
+int procura_ts(vector<st_tab_simb> tabela_simb, string rotulo,int* flag_EXTERN){
 
+  
   st_tab_simb simbolo1;
   int existe_rotul =-1;
   vector<st_tab_simb>::iterator tabela_simb_it;
-      for(tabela_simb_it = tabela_simb.begin(); tabela_simb_it!=tabela_simb.end(); tabela_simb_it++){
-        simbolo1 = *tabela_simb_it;
-        if(rotulo == simbolo1.rotulo){
-          existe_rotul = simbolo1.ender;
-        }
+    for(tabela_simb_it = tabela_simb.begin(); tabela_simb_it!=tabela_simb.end(); tabela_simb_it++){
+      simbolo1 = *tabela_simb_it;
+      if(rotulo == simbolo1.rotulo){
+        existe_rotul = simbolo1.ender;
+        *flag_EXTERN = simbolo1.rot_extern;
       }
-  return existe_rotul;
+    }
+    return existe_rotul;
 }
 
 
