@@ -4,6 +4,7 @@
 #include <string>
 #include <stdlib.h>
 #include <vector>
+#include <sstream>
 
 using namespace std;
 
@@ -56,11 +57,14 @@ void mostra_instrucao(string,string,string,string);
 
 int main (int argv, char** argc) {
 
-  string line,rotulo,op,mem1,mem2,mem_array;
+  string line,rotulo,op,mem1,mem2,mem_array,temp_mem;
   int contador_mem =0, tam=-1,acha_diret=-1,existe_rotul=1,tamanho_diret=0,conta_linha=1;
 
-  int set_BEGIN =0, set_END =0, set_TEXT =0, set_STOP=0;  // checar se tem BEGIN, END e SECTION TEXT
-  int *flag_EXTERN = (int*)calloc(1,sizeof(int)), compensa_array=0,pos,compensa_array2 =0;
+  int set_BEGIN =0, set_END =0, set_TEXT =0, set_STOP=0;//,set_DATA;  // checar se tem BEGIN, END e SECTION TEXT
+  int *flag_EXTERN = (int*)calloc(1,sizeof(int)), compensa_array=0,pos,compensa_array2 =0,temp_memi=0;
+
+  stringstream converte_hex;
+  ostringstream convert; 
   
 
   struct sep_instr instruc;
@@ -158,7 +162,14 @@ int main (int argv, char** argc) {
         }else if(op == "SECTION" && mem1 == "TEXT"){
           //cout<<"there is a TEXT SECTION"<<endl;
           set_TEXT = 1;
-        }else if(op == "PUBLIC"){
+        }else if(op == "SECTION" && mem1 == "DATA"){
+          if(set_TEXT==0){
+            cout<<"erro: SECTION DATA antes de SECTION TEXT:"<<endl;
+            cout<<"linha "<<conta_linha<<": "<<line<<endl;
+            exit(1);
+          }
+        }
+        else if(op == "PUBLIC"){
           simbolo1.rotulo = mem1;
           simbolo1.ender = -1;
           simbolo1.rot_extern = -1;
@@ -274,6 +285,17 @@ int main (int argv, char** argc) {
       rotulo = instruc.rotulo;
       mem2 = instruc.mem2;
 
+      pos = (int)mem1.find("0x");
+      if(pos == 0){
+        //hexadecimal
+        temp_mem.assign(mem1,2,mem1.length());
+        temp_memi = atoi(temp_mem.c_str());
+        converte_hex << temp_memi;
+        converte_hex>> std::hex>> temp_memi;
+        convert << temp_memi;
+        mem1 = convert.str();
+        cout<<"convert: "<<mem1;
+      }
       /** Existe operando e ele não é um numero**/
       if(!mem1.empty() && (atoi(mem1.c_str())==0)){
 
@@ -295,6 +317,7 @@ int main (int argv, char** argc) {
         }
       }
       /** Segundo operando não é um numero**/
+
       if(!mem2.empty() && (atoi(mem2.c_str())==0)){
 
         //*** verifica se foi feita utilização de vetor *////
