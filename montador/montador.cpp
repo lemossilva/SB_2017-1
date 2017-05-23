@@ -174,7 +174,8 @@ int chama_montador(string nome_entrada,string nome_saida){
 
 
       if(existe_rotul>0){
-        cout<<"error semantico, (linha "<<conta_linha<<"):"<<rotulo<<" rotulo redefinido"<<endl;
+        cout<<"error semantico, rotulo \":"<<rotulo<<"\" redefinido"<<endl;
+        cout<<"linha "<<conta_linha<<": "<<line<<endl;
         exit(1);
       }
       else{
@@ -226,7 +227,8 @@ int chama_montador(string nome_entrada,string nome_saida){
         contador_mem= contador_mem + tamanho_diret;
       }
       else{
-        cout<<"error lexico(linha: "<<conta_linha<<"): "<<op<<" operacao/diretiva invalida"<<endl; 
+        cout<<"error lexico : \""<<op<<"\" operacao/diretiva invalida"<<endl; 
+        cout<<"linha "<<conta_linha<<" :"<<line<<endl;
         exit(1);
       }
       
@@ -246,19 +248,19 @@ int chama_montador(string nome_entrada,string nome_saida){
 
   
   if(set_BEGIN && !set_END){
-    cout<<"erro: falta de 'END'"<<endl;
+    cout<<"erro semantico: falta de 'END'"<<endl;
     exit(1);
   }else if(set_END && !set_BEGIN){
-    cout<<"erro: falta de 'BEGIN'"<<endl;
+    cout<<"erro semantico: falta de 'BEGIN'"<<endl;
     exit(1);
   }
   if(!set_TEXT){
-    cout<<"erro: falta de SECTION TEXT"<<endl;
+    cout<<"erro semantico: falta de SECTION TEXT"<<endl;
     exit(1);
   }
   
   if(!set_STOP && !set_BEGIN && !set_END){
-    cout<<"erro: falta de STOP: "<<endl;
+    cout<<"erro semantico: falta de STOP: "<<endl;
     exit(1);
   }
 
@@ -336,7 +338,8 @@ int chama_montador(string nome_entrada,string nome_saida){
       existe_rotul = procura_ts(tabela_simb,mem1,flag_EXTERN);
       //* Caso não seja encontrado */
       if(existe_rotul==-1){
-          cout<<"error (linha "<<conta_linha<<"):rotulo "<<mem1<<" não definido"<<endl;
+          cout<<"error semantico: rotulo \""<<mem1<<"\" não definido"<<endl;
+          cout<<"linha "<<conta_linha<<" \""<<line<<"\""<<endl;
           exit(1);
       }
     }
@@ -542,9 +545,8 @@ struct sep_instr separa_linha(string line, int conta_linha,int* error){
     }
     //*contador_mem = 2;
     if(!line.empty()){
-      cout<<line<<endl;
-      cout<<"error: (linha "<<conta_linha<<"): mais de 2 operandos"<<endl;
-      exit(1);
+      cout<<"error sintatico, (linha "<<conta_linha<<"): mais de 2 operandos"<<endl;
+      *error = 1;
     }
 
   return instruc;
