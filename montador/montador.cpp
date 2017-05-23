@@ -392,9 +392,9 @@ int chama_montador(string nome_entrada,string nome_saida){
           //contador_mem_old++;
         }if(!mem2.empty()){
 
-          existe_rotul = procura_ts(tabela_simb,mem1,flag_EXTERN);
+          existe_rotul = procura_ts(tabela_simb,mem2,flag_EXTERN);
           if(*flag_EXTERN == 1){
-            simbolo1.rotulo = mem1;
+            simbolo1.rotulo = mem2;
             simbolo1.ender = code_to_file.size();
             tabela_uso.push_back(simbolo1);
           }
